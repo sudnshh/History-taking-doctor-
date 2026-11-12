@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedStudentsHub - الإصدار السريري</title>
+  <!-- Google Fonts: IBM Plex Sans Arabic + Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Navbar Header Matching Design -->
+    <header class="navbar-card">
+      <!-- Profile Button -->
+      <div class="profile-chip" id="profileBtn" title="تعديل الحساب الشخصي">
+        <div class="avatar-wrapper">
+          <span class="avatar-circle" id="userAvatar">ط</span>
+        </div>
+        <span class="user-name" id="navUserName">زائر</span>
+      </div>
+
+      <button class="auth-nav-btn" id="authBtn">تسجيل الدخول</button>
+      <a class="auth-nav-btn" id="adminDashboardLink" href="/admin.html" hidden>لوحة الإدارة</a>
+      <a class="auth-nav-btn" id="studentPortalLink" href="/student.html" hidden>ملف الهستريات</a>
+      <a class="auth-nav-btn" id="doctorPortalLink" href="/doctor.html" hidden>بوابة الدكتور</a>
+      <!-- Main Navigation Buttons -->
+      <div class="nav-actions">
+        <button class="nav-btn" id="tabSaved">
+          <i data-lucide="bookmark" class="icon-sm"></i>
+          <span>المحفوظات</span>
+        </button>
+
+        <button class="nav-btn" id="tabGroups">
+          <i data-lucide="users" class="icon-sm"></i>
+          <span>المجموعات</span>
+        </button>
+
+        <button class="nav-btn nav-btn-primary" id="openEditorBtn">
+          <i data-lucide="pen-tool" class="icon-sm"></i>
+          <span>كتابة تاريخ مرضي</span>
+        </button>
+
+        <button class="nav-btn active" id="tabFeed">
+          <i data-lucide="compass" class="icon-sm"></i>
+          <span>الخلاصة العامة</span>
+        </button>
+      </div>
+
+      <!-- Brand Logo / Hub Title -->
+      <div class="brand-section">
+        <div class="brand-title-wrap">
+          <div class="brand-title">
+            <span class="badge-edition">الإصدار السريري</span>
+            <span class="hub-name">MedStudents<span class="hub-highlight">Hub</span></span>
+            <div class="brand-icon">
+              <i data-lucide="plus" stroke-width="3"></i>
+            </div>
+          </div>
+          <p class="brand-tagline">Learn Together. Share Cases. Build Clinical Skills.</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Privacy & Clinical Anonymization Banner -->
+    <section class="banner-privacy">
+      <i data-lucide="shield-alert" class="banner-icon"></i>
+      <span><strong>تنبيه الخصوصية والسرية الطبية:</strong> يُمنع تماماً كتابة أسماء المرضى، أرقام الهواتف أو المستندات الرسمية. جميع التواريخ المرضية يجب أن تكون مجهولة الهوية بالكامل (Anonymized).</span>
+    </section>
+
+    <!-- Main Dynamic Feed Section -->
+    <main id="mainFeedView">
+      <!-- Search & Specialty Filter Controls Bar -->
+      <div class="controls-bar">
+        <div class="search-box">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="searchInput" placeholder="بحث في الحالات أو الأعراض...">
+        </div>
+
+        <div class="filter-group" id="filterTags">
+          <span class="filter-label">التخصص:</span>
+          <button class="filter-pill active" data-dept="all">الكل</button>
+          <button class="filter-pill" data-dept="باطنية">باطنية (Medicine)</button>
+          <button class="filter-pill" data-dept="جراحة">جراحة (Surgery)</button>
+          <button class="filter-pill" data-dept="أطفال">أطفال (Pediatrics)</button>
+          <button class="filter-pill" data-dept="نسائية">نسائية وتوليد (Ob/Gyn)</button>
+          <button class="filter-pill" data-dept="طوارئ">طوارئ (ER)</button>
+        </div>
+      </div>
+
+      <!-- Grid of Clinical History Cards -->
+      <div class="cases-grid" id="casesContainer">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </main>
+
+    <!-- Groups Section -->
+    <main id="groupsView" class="hidden-view">
+      <div class="view-header">
+        <h2>المجموعات الطلابية السريرية</h2>
+        <p>انضم إلى مجموعات كليتك وتخصصاتك لمناقشة الحالات السريرية في المستشفيات التعليمية</p>
+        <button class="btn-accent" id="createGroupBtn" type="button" style="margin-top:12px">+ إنشاء مجموعة طلابية</button>
+      </div>
+      <div id="groupsContainer" class="groups-grid"></div>
+      <p class="hint-text">المجموعات مفتوحة للانضمام، ولا تمثل جهة جامعية رسمية. المنشورات الخاصة بالمجموعة تظهر لأعضائها فقط.</p>
+    </main>
+  </div>
+
+  <!-- Clinical History Handwriting Editor Modal (Apple Pencil & Stylus Studio) -->
+  <div class="modal-backdrop" id="editorModal">
+    <div class="modal-box modal-fullscreen">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <div class="icon-circle">
+            <i data-lucide="book-open"></i>
+          </div>
+          <div>
+            <h3>دفتر التاريخ المرضي السريري (Clinical History Notebook)</h3>
+            <p id="editorStepHint">الخطوة 1 من 2: اكتب التاريخ المرضي بالقلم أولاً، ثم أكمل بيانات الحالة</p>
+          </div>
+        </div>
+        <div class="header-btns">
+          <button class="btn-secondary" id="closeEditorBtn">إلغاء</button>
+          <button class="btn-accent" id="continueCaseBtn" type="button">
+            <i data-lucide="arrow-left" class="icon-sm"></i>
+            خلصت كتابة الهستري — التالي
+          </button>
+          <button class="btn-secondary" id="backToHistoryBtn" type="button" hidden>
+            <i data-lucide="arrow-right" class="icon-sm"></i>
+            رجوع للكتابة
+          </button>
+          <button class="btn-accent" id="publishCaseBtn" type="button" hidden>
+            <i data-lucide="send" class="icon-sm"></i>
+            إرسال للمراجعة
+          </button>
+        </div>
+      </div>
+
+      <div class="editor-body" id="editorBody">
+        <!-- Canvas Handwriting Studio -->
+        <div class="canvas-workspace">
+          <!-- Toolbar -->
+          <div class="studio-toolbar">
+            <div class="tool-group">
+              <span class="tool-label">القلم:</span>
+              <button class="tool-btn active" id="penTool" title="قلم الحبر السريري"><i data-lucide="edit-3"></i></button>
+              <button class="tool-btn" id="eraserTool" title="ممحاة"><i data-lucide="eraser"></i></button>
+            </div>
+
+            <div class="tool-divider"></div>
+
+            <div class="tool-group">
+              <span class="tool-label">اللون:</span>
+              <div class="color-palette">
+                <button class="color-swatch active" data-color="#1e3a8a" style="background: #1e3a8a;" title="حبر أزرق سريري"></button>
+                <button class="color-swatch" data-color="#111827" style="background: #111827;" title="أسود طبي"></button>
+                <button class="color-swatch" data-color="#dc2626" style="background: #dc2626;" title="أحمر للأعراض الحادة"></button>
+                <button class="color-swatch" data-color="#059669" style="background: #059669;" title="أخضر للملاحظات"></button>
+              </div>
+            </div>
+
+            <div class="tool-divider"></div>
+
+            <div class="tool-group">
+              <span class="tool-label">سُمك الخط:</span>
+              <input type="range" id="brushSize" min="1" max="10" value="2" class="slider-sm">
+            </div>
+
+            <div class="tool-divider"></div>
+
+            <div class="tool-group">
+              <button class="tool-btn" id="undoBtn" title="تراجع"><i data-lucide="undo-2"></i></button>
+              <button class="tool-btn" id="redoBtn" title="إعادة"><i data-lucide="redo-2"></i></button>
+              <button class="tool-btn tool-btn-danger" id="clearCanvasBtn" title="مسح الصفحة"><i data-lucide="trash-2"></i></button>
+            </div>
+
+            <div class="page-nav">
+              <button class="page-btn" id="prevPageBtn" title="الصفحة السابقة"><i data-lucide="chevron-right"></i></button>
+              <span class="page-indicator" id="pageIndicator">الصفحة 1 من 1</span>
+              <button class="page-btn" id="nextPageBtn" title="الصفحة التالية"><i data-lucide="chevron-left"></i></button>
+              <button class="btn-add-page" id="addPageBtn"><i data-lucide="plus"></i> صفحة جديدة</button>
+            </div>
+          </div>
+
+          <!-- Lined Clinical Paper Canvas Area -->
+          <div class="paper-container">
+            <div class="clinical-paper" id="paperWrapper">
+              <!-- Clinical Paper Header -->
+              <div class="paper-top-header">
+                <div class="pt-title">CLINICAL HISTORY &amp; PHYSICAL EXAM</div>
+                <div class="pt-meta-fields">
+                  <span>AGE/SEX: <span class="pt-line">________</span></span>
+                  <span>CASE ID: <span class="pt-line">________</span></span>
+                  <span>DATE: <span class="pt-line" id="paperDateAuto"></span></span>
+                </div>
+              </div>
+              <canvas id="clinicalCanvas" width="800" height="1100"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Case Meta Data Sidebar -->
+        <div class="case-meta-sidebar" id="caseMetaStage" hidden>
+          <div class="case-meta-intro">
+            <span class="case-step-label">الخطوة 2 من 2</span>
+            <h4>بيانات الحالة السريرية</h4>
+            <p>كمّلت كتابة الهستري؟ هسه عبّي معلومات الحالة حتى تنشرها. تگدر ترجع للورقة بأي وقت بدون ما تضيع كتابتك.</p>
+          </div>
+          <div class="form-item">
+            <label>عنوان الحالة المرضية:</label>
+            <input type="text" id="metaTitle" placeholder="مثال: حالة ألم صدري حاد مشتبه احتشاء عضلة القلب (ACS)">
+          </div>
+
+          <div class="form-row">
+            <div class="form-item">
+              <label>التخصص الطبي:</label>
+              <select id="metaDept">
+                <option value="باطنية">باطنية (Medicine)</option>
+                <option value="جراحة">جراحة (Surgery)</option>
+                <option value="أطفال">أطفال (Pediatrics)</option>
+                <option value="نسائية">نسائية وتوليد (Ob/Gyn)</option>
+                <option value="طوارئ">طوارئ (ER)</option>
+              </select>
+            </div>
+            <div class="form-item">
+              <label>المرحلة الدراسية:</label>
+              <select id="metaYear">
+                <option value="المرحلة السادسة (سنة الامتياز/النهائية)">المرحلة السادسة</option>
+                <option value="المرحلة الخامسة">المرحلة الخامسة</option>
+                <option value="المرحلة الرابعة (بداية الكلينيكال)">المرحلة الرابعة</option>
+                <option value="المرحلة الثالثة">المرحلة الثالثة</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-item">
+            <label>الجامعة / المستشفى التعليمي:</label>
+            <input type="text" id="metaHospital" placeholder="مثال: جامعة بغداد - كلية الطب / مدينة الطب">
+          </div>
+
+          <div class="form-item">
+            <label>اللؤلؤة السريرية (Clinical Pearl / الملاحظة الأهم):</label>
+            <textarea id="metaPearl" rows="3" placeholder="ملاحظة أو علامة فارقة لاحظتها في فحص المريض تفيد زملاءك..."></textarea>
+          </div>
+
+          <div class="form-item">
+            <label>مستوى النشر:</label>
+            <select id="metaAudience">
+              <option value="public">الخلاصة العامة (متاح لجميع طلاب الطب حول العالم)</option>
+              <option value="group">أعضاء مجموعتي فقط</option>
+            </select>
+          </div>
+
+          <div class="form-item">
+            <label for="metaDoctor">الدكتور الذي أخذت معه الـ History <strong style="color:#b91c1c">*</strong></label>
+            <select id="metaDoctor" required><option value="">اختر الدكتور أولاً</option></select>
+            <small class="hint-text">يُرسل الهستري للدكتور المختار فقط، ولن يُنشر قبل موافقته.</small>
+          </div>
+          <div class="form-item">
+            <label for="metaPdf">رفع ملف History بصيغة PDF (اختياري عند الكتابة بالدفتر)</label>
+            <input type="file" id="metaPdf" accept="application/pdf,.pdf" />
+            <small class="hint-text">الحد الأقصى 8MB. ارفع ملفاً من دون معلومات تعرّف المريض.</small>
+          </div>
+          <div class="form-item" id="groupSelectWrap" hidden>
+            <label for="metaGroup">المجموعة:</label>
+            <select id="metaGroup"></select>
+          </div>
+          <div class="hint-text" id="draftStatus" aria-live="polite">يُحفظ دفتر الكتابة محلياً كمسودة تلقائية.</div>
+          <div class="privacy-confirmation">
+            <label>
+              <input type="checkbox" id="privacyAgree">
+              <span>أؤكد أن الحالة لا تحتوي على أي معلومات تكشف هوية المريض الحقيقية وملتزمة بقواعد السرية الطبية.</span>
+            </label>
+          </div>
+          <p id="publishError" class="publish-error" role="alert" aria-live="assertive" hidden></p>
+          <p id="publishStatus" class="publish-status" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Case Detailed Reader & Discussion Modal -->
+  <div class="modal-backdrop" id="readerModal">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <div>
+          <span class="badge-dept" id="readerDeptTag">باطنية</span>
+          <h3 id="readerTitle" style="margin-top:6px;">عنوان الحالة</h3>
+          <p class="reader-sub" id="readerSub">جامعة بغداد - كلية الطب</p>
+        </div>
+        <div class="header-btns">
+          <button class="btn-secondary" id="downloadCasePdfBtn">
+            <i data-lucide="download" class="icon-sm"></i>
+            تنزيل الورقة
+          </button>
+          <button class="btn-secondary" id="reportCaseBtn" title="الإبلاغ عن بيانات حساسة">إبلاغ</button>
+          <button class="btn-secondary" id="deleteCaseBtn" hidden>حذف الحالة</button>
+          <button class="btn-icon" id="closeReaderBtn">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="reader-body">
+        <div class="reader-sheet-view">
+          <div class="reader-img-wrapper" id="readerImgWrapper">
+            <!-- Sheet Image -->
+          </div>
+          <div class="reader-pages-nav" id="readerPagesNav">
+            <!-- Page switchers -->
+          </div>
+        </div>
+
+        <div class="reader-discussion">
+          <div class="pearl-highlight">
+            <i data-lucide="sparkles" class="pearl-icon"></i>
+            <div>
+              <strong>اللؤلؤة السريرية (Clinical Pearl):</strong>
+              <p id="readerPearlText">نص اللؤلؤة...</p>
+            </div>
+          </div>
+
+          <div class="discussion-header">
+            <h4>المناقشة السريرية والتشخيص التفريقي</h4>
+            <span id="commentsCountText">0 تعليقات</span>
+          </div>
+
+          <div class="comments-list" id="commentsList">
+            <!-- Comments -->
+          </div>
+
+          <div class="add-comment-box">
+            <input type="text" id="newCommentInput" placeholder="أضف استفساراً سريرياً أو تشخيصاً تفريقياً (DDx)...">
+            <button class="btn-primary-sm" id="postCommentBtn">إرسال</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Edit Modal -->
+  <div class="modal-backdrop" id="profileModal">
+    <div class="modal-box modal-md">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i data-lucide="user-check"></i>
+          <h3>الملف الشخصي</h3>
+        </div>
+        <button class="btn-icon" id="closeProfileBtn"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body-form">
+        <div class="form-item">
+          <label>الاسم الكامل:</label>
+          <input type="text" id="editFullName" value="">
+        </div>
+        <div class="form-item" id="editStudentNumberWrap">
+          <label for="editStudentNumber">الرقم الجامعي (للطلاب، اختياري):</label>
+          <input type="text" id="editStudentNumber" maxlength="32" autocomplete="off" placeholder="مثل: 20241234">
+        </div>
+        <div class="form-item">
+          <label>الكلية / الجامعة:</label>
+          <input type="text" id="editUniversity" value="">
+        </div>
+        <div class="form-row">
+          <div class="form-item">
+            <label>الدولة:</label>
+            <input type="text" id="editCountry" value="">
+          </div>
+          <div class="form-item">
+            <label>المرحلة السريرية:</label>
+            <input type="text" id="editGrade" value="">
+          </div>
+        </div>
+        <button class="btn-accent" style="width: 100%; justify-content: center; margin-top: 15px;" id="saveProfileBtn">حفظ البيانات</button>
+        <div class="form-item" style="margin-top:16px;border-top:1px solid #dde5f0;padding-top:16px">
+          <strong>تغيير كلمة المرور</strong>
+          <label for="currentPassword">كلمة المرور الحالية</label>
+          <input type="password" id="currentPassword" autocomplete="current-password">
+          <label for="newPassword">كلمة المرور الجديدة (12 حرفاً على الأقل)</label>
+          <input type="password" id="newPassword" autocomplete="new-password" minlength="12">
+          <button type="button" class="btn-secondary" id="changePasswordBtn">تحديث كلمة المرور</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="groupModal"><div class="modal-box modal-md">
+    <div class="modal-header"><h3>إنشاء مجموعة طلابية جديدة</h3><button class="btn-icon" id="closeGroupBtn" aria-label="إغلاق">×</button></div>
+    <form class="modal-body-form" id="groupForm">
+      <div class="form-item"><label>اسم المجموعة</label><input id="groupName" maxlength="65" required placeholder="مثلاً: طب كربلاء - المرحلة الرابعة"></div>
+      <div class="form-item"><label>وصف المجموعة</label><textarea id="groupDescription" maxlength="180" required rows="3" placeholder="مجموعة لمناقشة الحالات السريرية والتاريخ المرضي"></textarea></div>
+      <p class="hint-text">الانضمام للمجموعة مفتوح لجميع مستخدمي المنصة؛ لا تشارك أي معلومات حساسة.</p>
+      <button class="btn-accent" type="submit">إنشاء والانضمام</button>
+    </form></div></div>
+  <!-- Account modal; feeds remain readable without signing in -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-box modal-md">
+      <div class="modal-header">
+        <div class="modal-title-wrap"><i data-lucide="graduation-cap"></i><h3 id="authTitle">دخول الطلاب إلى MedStudentsHub</h3></div>
+        <button class="btn-icon" id="closeAuthBtn" aria-label="إغلاق"><i data-lucide="x"></i></button>
+      </div>
+      <form class="modal-body-form" id="authForm">
+        <div class="form-item" id="authNameWrap" hidden><label>الاسم الذي سيظهر لزملائك</label><input id="authName" maxlength="80" autocomplete="name"></div>
+        <div class="form-item" id="authStudentNumberWrap" hidden><label for="authStudentNumber">الرقم الجامعي (اختياري، للبحث الإداري)</label><input id="authStudentNumber" maxlength="32" autocomplete="off" placeholder="مثل: 20241234"></div>
+        <div class="form-item"><label>البريد الإلكتروني</label><input type="email" id="authEmail" required maxlength="180" autocomplete="email"></div>
+        <div class="form-item"><label>كلمة المرور (10 أحرف على الأقل)</label><input type="password" id="authPassword" required minlength="10" autocomplete="current-password"></div>
+        <button class="btn-accent" id="submitAuthBtn" type="submit">تسجيل الدخول</button>
+        <button class="text-action" id="switchAuthMode" type="button">ليس لديك حساب؟ إنشاء حساب</button>
+        <p class="hint-text">تستخدم الحسابات كلمة مرور مشفرة وجلسة آمنة. لا تشارك أي معلومات تكشف هوية المرضى.</p>
+        <p id="authError" class="error-text" role="alert" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

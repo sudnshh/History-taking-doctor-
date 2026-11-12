@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MedStudentsHub | لوحة إدارة الحالات</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/portal.css">
+  <style>
+    .admin-shell{max-width:1150px;margin:0 auto;display:grid;gap:18px}
+    .admin-panel{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:20px;box-shadow:0 2px 8px #0f172a08}
+    .admin-panel h2{font-size:1.22rem;margin-bottom:10px}
+    .admin-panel p{line-height:1.7}
+    .admin-form{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+    .admin-form label{display:grid;gap:7px;flex:1;min-width:180px;font-weight:600}
+    .admin-form input,.admin-tools input,.admin-tools select{border:1px solid #cbd5e1;border-radius:10px;padding:11px 13px;font:inherit;min-height:44px;max-width:100%}
+    .admin-btn{border:0;border-radius:10px;background:#0f766e;color:white;font:inherit;font-weight:600;padding:10px 17px;min-height:44px;cursor:pointer}
+    .admin-btn:disabled{opacity:.55;cursor:wait}
+    .admin-btn.secondary{color:#0f766e;background:#ccfbf1}
+    .admin-btn.danger{background:#b91c1c}
+    .admin-btn.ghost{background:#f1f5f9;color:#334155}
+    .admin-tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
+    .admin-tools input{flex:2;min-width:170px}
+    .admin-tools select{flex:1;min-width:150px}
+    .admin-stats{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+    .admin-stats span{background:#f1f5f9;border-radius:12px;padding:10px 14px;font-size:.9rem}
+    .admin-case{border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin:10px 0;display:grid;gap:10px}
+    .admin-case .title{font-size:1.05rem;font-weight:700;color:#0f172a}
+    .admin-case .small{color:#64748b;font-size:.88rem;line-height:1.8;overflow-wrap:anywhere}
+    .admin-case .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .admin-warning{background:#fef3c7;border:1px solid #fde68a;color:#78350f;border-radius:12px;padding:14px}
+    .admin-alert{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px;line-height:1.7}
+    .admin-ok{color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px}
+    .admin-badge{display:inline-block;padding:3px 9px;border-radius:40px;background:#e0f2fe;color:#075985;font-size:.75rem}
+    .admin-badge.hidden{background:#fee2e2;color:#991b1b}
+    [hidden]{display:none!important}
+    @media(max-width:600px){body{padding:10px}.admin-panel{padding:14px}.navbar-card{padding:12px}.admin-form input{width:100%}}
+  </style>
+</head>
+<body>
+<div class="admin-shell">
+  <header class="navbar-card">
+    <div class="brand-section"><div class="brand-title-wrap"><div class="brand-title"><span class="hub-name">MedStudents<span class="hub-highlight">Hub</span></span></div><p class="brand-tagline">لوحة إدارة الحالات</p></div></div>
+    <a href="/" class="auth-nav-btn">العودة للمنصة</a>
+  </header>
+  <div class="admin-warning"><strong>لوحة خاصة بالمسؤول:</strong> تگدر تراجع كل الحالات، تحجب الحالات غير المناسبة وترجعها، أو تحذفها نهائياً. الحذف النهائي غير قابل للتراجع. لا تعرض معلومات المرضى الشخصية.</div>
+  <section class="admin-panel" id="loginPanel">
+    <h2>الدخول إلى لوحة الإدارة</h2>
+    <p id="adminAccount" class="hint-text">يجب أن تكون مسجّل الدخول في المنصة بحساب المسؤول.</p>
+    <form id="adminLogin" class="admin-form">
+      <label>مفتاح المشرف (ADMIN_KEY)
+        <input id="adminKey" type="password" autocomplete="off" required placeholder="اكتب المفتاح الذي أضفته في Railway">
+      </label>
+      <button class="admin-btn" id="unlockBtn" type="submit">فتح لوحة الإدارة</button>
+    </form>
+    <p class="hint-text">المفتاح لا ينحفظ بالمتصفح، وكل مرة تحدث الصفحة تحتاج تدخله من جديد.</p>
+  </section>
+  <p id="adminMessage" role="alert" aria-live="polite" hidden></p>
+  <section class="admin-panel" id="dashboard" hidden>
+    <h2>إدارة جميع الكيسات</h2>
+    <div class="admin-stats" id="adminStats"></div>
+    <div class="admin-tools">
+      <input type="search" id="adminSearch" placeholder="ابحث بالعنوان أو اسم الطالب أو التخصص">
+      <select id="adminStatus"><option value="all">كل الحالات</option><option value="visible">الظاهرة</option><option value="hidden">المحجوبة</option></select>
+      <button class="admin-btn secondary" id="reloadCases" type="button">تحديث القائمة</button>
+    </div>
+    <div id="adminCases" aria-live="polite">جارٍ التحميل...</div>
+  </section>
+  <section class="admin-panel" id="academicDashboard" hidden>
+    <h2>Academic Histories · إحصائيات الطلاب والدكاترة</h2>
+    <div class="admin-stats" id="academicStats"></div>
+    <div class="admin-tools">
+      <input type="search" id="studentSearch" placeholder="بحث بالاسم أو الرقم الجامعي أو ID">
+      <button class="admin-btn secondary" id="refreshAcademic" type="button">تحديث الإحصائيات</button>
+    </div>
+    <div class="scroll-table"><table><thead><tr><th>Student</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Pending</th><th>ملف الطالب</th></tr></thead><tbody id="studentRows"></tbody></table></div>
+    <h2 style="margin-top:26px">Doctor Accounts · حسابات الدكاترة</h2>
+    <form id="createDoctor" class="admin-form">
+      <label>اسم الدكتور<input id="doctorName" maxlength="80" required></label>
+      <label>البريد الإلكتروني<input id="doctorEmail" type="email" maxlength="180" required></label>
+      <label>كلمة مرور أولية (12 حرفاً على الأقل)<input id="doctorPassword" type="password" minlength="12" autocomplete="new-password" required></label>
+      <button class="admin-btn" type="submit">إنشاء حساب دكتور</button>
+    </form>
+    <p class="hint-text">أنشئ الحساب فقط للدكتور المصرح له، وأوصل كلمة المرور له بشكل خاص وآمن.</p>
+    <div class="scroll-table"><table><thead><tr><th>Doctor</th><th>البريد</th><th>Total</th><th>Reviewed</th><th>Pending</th></tr></thead><tbody id="doctorRows"></tbody></table></div>
+  </section>
+  <section class="admin-panel" id="reportsPanel" hidden>
+    <h2>بلاغات الطلاب</h2>
+    <div id="adminReports" aria-live="polite">جارٍ التحميل...</div>
+  </section>
+</div>
+<div class="dialog" id="adminHistoryDialog" role="dialog" aria-modal="true" aria-label="History Detail"><div class="dialog-card"><div class="dialog-head"><h2 id="adminHistoryTitle">تفاصيل الطالب</h2><button class="btn ghost" type="button" id="closeAcademicDialog">إغلاق</button></div><div id="adminHistoryBody"></div></div></div>
+<script src="/js/admin.js"></script>
+</body>
+</html>
