@@ -62,14 +62,67 @@ async function load(){
  metric('مقبولة',stats.approved,'✅')+metric('مرفوضة',stats.rejected,'✕');
  render();
 }
+// Doctor portal login and authenticated registration are handled on this page.
+let doctorAuthMode='login';
+function doctorMode(mode){
+ doctorAuthMode=mode;
+ $('doctorNameWrap').hidden=mode!=='register';
+ $('doctorInviteWrap').hidden=mode!=='register';
+ $('doctorName').required=mode==='register';
+ $('doctorInvite').required=mode==='register';
+ $('doctorPassword').minLength=mode==='register'?12:10;
+ $('doctorPassword').autocomplete=mode==='register'?'new-password':'current-password';
+ $('doctorSubmit').textContent=mode==='register'?'إنشاء حساب الدكتور':'دخول إلى لوحة الدكتور';
+ $('doctorLoginTab').className=mode==='login'?'btn':'btn secondary';
+ $('doctorRegisterTab').className=mode==='register'?'btn':'btn secondary';
+}
+async function doctorAuthSubmit(event){
+ event.preventDefault();
+ const btn=$('doctorSubmit');btn.disabled=true;
+ const body={email:$('doctorEmail').value.trim(),password:$('doctorPassword').value};
+ if(doctorAuthMode==='register'){body.name=$('doctorName').value.trim();body.inviteCode=$('doctorInvite').value;}
+ try{
+  const {user}=await request(doctorAuthMode==='register'?'/api/doctor/register':'/api/login',
+    {method:'POST',body:JSON.stringify(body)});
+  $('doctorPassword').value='';$('doctorInvite').value='';
+  await enterPortal(user);
+ }catch(e){msg(e.message,true);}
+ finally{btn.disabled=false;}
+}
+async function enterPortal(user){
+ if(!user){
+  if(role==='doctor'){$('doctorAuth').hidden=false;$('doctorDashboard').hidden=true;$('logoutDoctor').hidden=true;
+   $('welcome').textContent='سجل الدخول أو أنشئ حساب دكتور حتى تستقبل Histories الطلاب';}
+  else msg('سجّل الدخول من الصفحة الرئيسية أولاً.',true);
+  return;
+ }
+ if(user.role!==role){
+  msg(role==='doctor'?'هذا الحساب مسجل كطالب، وليس كدكتور. استخدم بريداً مختلفاً لإنشاء حساب دكتور مع رمز الدعوة، أو سجل الخروج.':'هذا الحساب غير مخصص للطلاب.',true);
+  if(role==='doctor'){$('doctorAuth').hidden=false;$('doctorDashboard').hidden=true;$('logoutDoctor').hidden=false;}
+  return;
+ }
+ if(role==='doctor'){$('doctorAuth').hidden=true;$('doctorDashboard').hidden=false;$('logoutDoctor').hidden=false;}
+ $('message').replaceChildren();
+ $('welcome').textContent=`مرحباً ${user.name} · ${role==='student'?'متابعة الهستريات المرفوعة':'مراجعة حالات الطلاب المرتبطة بحسابك'}`;
+ await load();
+}
+if(role==='doctor'){
+ doctorMode('login');
+ $('doctorLoginTab').addEventListener('click',()=>doctorMode('login'));
+ $('doctorRegisterTab').addEventListener('click',()=>doctorMode('register'));
+ $('doctorAuthForm').addEventListener('submit',doctorAuthSubmit);
+ $('logoutDoctor').addEventListener('click',async()=>{
+  try{await request('/api/logout',{method:'POST',body:'{}'});items=[];$('rows').replaceChildren();$('metrics').replaceChildren();
+   $('doctorAuth').hidden=false;$('doctorDashboard').hidden=true;$('logoutDoctor').hidden=true;
+   $('welcome').textContent='سجل الدخول أو أنشئ حساب دكتور حتى تستقبل Histories الطلاب';
+   msg('تم تسجيل الخروج');}catch(e){msg(e.message,true);}
+ });
+}
 $('closeDialog').onclick=()=>$('dialog').classList.remove('open');
 $('dialog').addEventListener('click',e=>{if(e.target===$('dialog'))$('dialog').classList.remove('open');});
 $('search').addEventListener('input',render);
-(async()=>{try{const {user}=await request('/api/me');
- if(!user){msg('سجّل الدخول من الصفحة الرئيسية أولاً.',true);return;}
- if(user.role!==role){msg('لا تملك صلاحية الدخول إلى هذه البوابة.',true);return;}
- $('welcome').textContent=`مرحباً ${user.name} · ${role==='student'?'متابعة الهستريات المرفوعة':'مراجعة حالات الطلاب المرتبطة بحسابك'}`;
- await load();}catch(e){msg('تعذر تحميل البيانات: '+e.message,true);}})();
+(async()=>{try{const {user}=await request('/api/me');await enterPortal(user);}
+ catch(e){msg('تعذر تحميل البيانات: '+e.message,true);}})();
 
 // Refresh counts and statuses from SQLite while the dashboard is open.
-setInterval(()=>{if(!document.hidden)load().catch(()=>{});},30000);
+setInterval(()=>{if(!document.hidden&&(role==='student'||(role==='doctor'&&!$('doctorDashboard').hidden)))load().catch(()=>{});},30000);

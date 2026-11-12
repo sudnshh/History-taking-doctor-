@@ -1,6 +1,31 @@
-<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MedStudentsHub | Doctor Portal</title><link rel="stylesheet" href="/css/portal.css"></head>
-<body data-role="doctor"><div class="portal-wrap"><header class="portal-header"><div><div class="portal-logo">MedStudents<span>Hub</span></div><div class="portal-sub">Doctor Portal · بوابة الدكتور</div></div><div class="header-links"><a href="/">الصفحة الرئيسية</a></div></header>
-<div class="hero"><h1>لوحة مراجعة الـClinical History</h1><p id="welcome">فقط طلبات الطلاب الذين اختاروك دكتوراً للمراجعة</p></div>
-<div id="message" aria-live="polite"></div><div class="cards" id="metrics"></div>
-<section class="panel"><div class="panel-head"><h2>الهستريات المخصصة لي</h2><input class="search" id="search" type="search" placeholder="ابحث باسم الطالب أو الحالة..."></div><div class="scroll-table"><table><thead><tr><th>History</th><th>الطالب</th><th>تاريخ الرفع</th><th>الحالة</th><th>المراجعة</th></tr></thead><tbody id="rows"></tbody></table></div></section></div>
-<div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-label="مراجعة الهستري"><div class="dialog-card"><div class="dialog-head"><h2 id="detailTitle"></h2><button class="btn ghost" id="closeDialog">إغلاق</button></div><div id="detail"></div></div></div><script src="/js/portal.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MedStudentsHub | Doctor Portal</title><link rel="stylesheet" href="/css/portal.css"></head>
+<body data-role="doctor">
+<div class="portal-wrap">
+ <header class="portal-header"><div><div class="portal-logo">MedStudents<span>Hub</span></div><div class="portal-sub">Doctor Portal · بوابة الدكتور</div></div>
+ <div class="header-links"><a href="/">الصفحة الرئيسية</a><button class="btn ghost" id="logoutDoctor" type="button" hidden>تسجيل الخروج</button></div></header>
+ <div class="hero"><h1>لوحة مراجعة الـClinical History</h1><p id="welcome">سجل الدخول أو أنشئ حساب دكتور حتى تستقبل Histories الطلاب</p></div>
+ <div id="message" aria-live="polite"></div>
+ <section class="panel auth-panel" id="doctorAuth">
+  <h2>حساب الدكتور</h2><p class="muted">إذا عندك حساب دكتور سجّل دخول. إذا أول مرة، أنشئ حسابك برمز الدعوة الذي تمنحه الإدارة للدكاترة.</p>
+  <div class="auth-tabs"><button class="btn" type="button" id="doctorLoginTab">تسجيل الدخول</button><button class="btn secondary" type="button" id="doctorRegisterTab">إنشاء حساب دكتور</button></div>
+  <form id="doctorAuthForm" autocomplete="on">
+   <div id="doctorNameWrap" hidden><label class="field">اسم الدكتور (سيظهر للطلاب)<input id="doctorName" name="name" autocomplete="name" maxlength="80" placeholder="د. أحمد محمد"></label></div>
+   <label class="field">البريد الإلكتروني<input id="doctorEmail" name="email" type="email" autocomplete="email" maxlength="180" required></label>
+   <label class="field">كلمة المرور<input id="doctorPassword" name="password" type="password" autocomplete="current-password" minlength="10" required></label>
+   <div id="doctorInviteWrap" hidden><label class="field">رمز دعوة الدكاترة (من الإدارة)<input id="doctorInvite" name="inviteCode" type="password" autocomplete="off" placeholder="اطلب الرمز من إدارة المنصة"></label></div>
+   <button class="btn" type="submit" id="doctorSubmit">دخول إلى لوحة الدكتور</button>
+  </form>
+  <p class="muted">مهم: لا تشارك كلمة مرورك أو رمز الدعوة، ولا ترفع أي بيانات تحدد هوية المريض.</p>
+ </section>
+ <div id="doctorDashboard" hidden>
+  <div class="cards" id="metrics"></div>
+  <section class="panel"><div class="panel-head"><h2>الهستريات المخصصة لي</h2><input class="search" id="search" type="search" placeholder="ابحث باسم الطالب أو الحالة..."></div>
+   <div class="scroll-table"><table><thead><tr><th>History</th><th>الطالب</th><th>تاريخ الرفع</th><th>الحالة</th><th>المراجعة</th></tr></thead><tbody id="rows"></tbody></table></div>
+  </section>
+ </div>
+</div>
+<div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-label="مراجعة الهستري"><div class="dialog-card"><div class="dialog-head"><h2 id="detailTitle"></h2><button class="btn ghost" id="closeDialog">إغلاق</button></div><div id="detail"></div></div></div>
+<script src="/js/portal.js"></script></body></html>

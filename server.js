@@ -17,6 +17,11 @@ const SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 const ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
 const ADMIN_KEY = String(process.env.ADMIN_KEY || '');
 const ADMIN_KEY_MIN_LENGTH = 24;
+// Doctor self-enrolment: the dean/administrator shares this private invitation code
+// with verified faculty members. Never put the code in HTML, GitHub or a URL.
+const DOCTOR_INVITE_CODE = String(process.env.DOCTOR_INVITE_CODE || '');
+const DOCTOR_INVITE_MIN_LENGTH = 24;
+
 const loginFailures = new Map();
 fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
 const db = new DatabaseSync(path.join(DATA_DIR, 'medstudentshub.sqlite'));
@@ -315,6 +320,27 @@ async function api(req,res,url) {
     if(studentNumber&&db.prepare('SELECT 1 FROM users WHERE student_number=? AND role=\'student\'').get(studentNumber))err(409,'الرقم الجامعي مستخدم مسبقاً');
     const id=uid();
     db.prepare('INSERT INTO users(id,email,password_hash,name,student_number,created_at) VALUES(?,?,?,?,?,?)').run(id,email,hashPw(password),name,studentNumber,now());
+    return createSession(res,db.prepare('SELECT * FROM users WHERE id=?').get(id),req);
+  }
+  // Faculty account self-registration. Only holders of the private faculty invite
+  // may gain the doctor role; otherwise a student could approve their own work.
+  if(method==='POST'&&p==='/api/doctor/register') {
+    rateLimit(req);
+    if(DOCTOR_INVITE_CODE.length<DOCTOR_INVITE_MIN_LENGTH)
+      err(503,'تسجيل الدكاترة غير مفعّل حالياً؛ على الإدارة ضبط DOCTOR_INVITE_CODE في Railway');
+    const b=await readBody(req),name=str(b.name,80),email=str(b.email,180).toLowerCase(),password=b.password;
+    const received=typeof b.inviteCode==='string'?b.inviteCode:'';
+    const expected=Buffer.from(DOCTOR_INVITE_CODE,'utf8'),entered=Buffer.from(received,'utf8');
+    if(expected.length!==entered.length||!crypto.timingSafeEqual(expected,entered))
+      err(403,'رمز دعوة الدكتور غير صحيح؛ تواصل مع إدارة المنصة');
+    if(name.length<2||!validEmail(email)||typeof password!=='string'||password.length<12||password.length>200)
+      err(400,'أدخل اسم الدكتور وبريداً صحيحاً وكلمة مرور من 12 حرفاً على الأقل');
+    if(db.prepare('SELECT 1 FROM users WHERE email=?').get(email))
+      err(409,'هذا البريد مسجل مسبقاً؛ سجّل الدخول بحسابك أو اطلب من الإدارة المساعدة');
+    const id=uid();
+    db.prepare("INSERT INTO users(id,email,password_hash,name,role,created_at) VALUES(?,?,?,?,?,?)")
+      .run(id,email,hashPw(password),name,'doctor',now());
+    // The account is instantly available in /api/doctors and the reviewer dashboard.
     return createSession(res,db.prepare('SELECT * FROM users WHERE id=?').get(id),req);
   }
   if(method==='POST'&&p==='/api/login') {

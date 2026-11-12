@@ -29,3 +29,9 @@ td{font-size:13px;color:#2a4565}.muted{color:#788aa1;font-size:12px}.status{disp
 .history-info{line-height:1.9;color:#36516d;font-size:14px;margin-top:15px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0}
 @media(max-width:830px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.portal-header{flex-wrap:wrap}.hero h1{font-size:22px}}
 @media(max-width:460px){.cards{gap:8px}.metric{padding:13px}.metric .number{font-size:24px}.portal-wrap{padding:10px 10px 30px}.panel{padding:13px}.dialog-card{padding:17px}}
+
+[hidden]{display:none!important}
+.auth-panel{max-width:580px;margin:20px auto}
+.auth-panel .auth-tabs{display:flex;gap:9px;margin:16px 0;flex-wrap:wrap}
+.auth-panel .auth-tabs .btn{flex:1;min-width:130px}
+.auth-panel .field{margin:12px 0 16px}

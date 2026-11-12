@@ -62,12 +62,17 @@ async function logout(){
   catch(e){toast(e.message);}
 }
 async function loadDoctors(){
-  const select=$('metaDoctor');
-  select.replaceChildren(new Option('اختر الدكتور الذي أخذت معه الـ History',''));
-  if(!state.user||state.user.role!=='student')return;
+  const select=$('metaDoctor'),previous=select.value;
+  if(!state.user||state.user.role!=='student'){
+    select.replaceChildren(new Option('سجل الدخول كطالب أولاً',''));return;
+  }
   const {doctors}=await api('/doctors');
+  select.replaceChildren(new Option(doctors.length?'اختر الدكتور الذي أخذت معه الـ History':'ماكو دكاترة مسجلين بعد — اطلب من الدكتور التسجيل',''));
   for(const d of doctors)select.add(new Option(d.name,d.id));
-  try{const saved=JSON.parse(localStorage.getItem(draftKey())||'null');if(saved?.metadata?.doctorId)select.value=saved.metadata.doctorId;}catch{}
+  // Preserve the student's current choice or previously saved local draft.
+  let saved='';try{saved=JSON.parse(localStorage.getItem(draftKey())||'null')?.metadata?.doctorId||'';}catch{}
+  if(doctors.some(d=>d.id===previous))select.value=previous;
+  else if(doctors.some(d=>d.id===saved))select.value=saved;
 }
 async function loadGroups(){const r=await api('/groups');state.groups=r.groups;renderGroups();updateGroupSelect();}
 async function loadCases(){const r=await api('/cases');state.cases=r.cases;renderCases();}
@@ -344,7 +349,8 @@ function continueToCaseDetails(){
   setEditorStep('meta');
   $('metaTitle').focus({preventScroll:true});
 }
-function openEditor(){if(!mustLogin())return;restoreDraft();$('privacyAgree').checked=false;setEditorStep('history');showModal('editorModal');}
+function openEditor(){if(!mustLogin())return;restoreDraft();$('privacyAgree').checked=false;setEditorStep('history');showModal('editorModal');
+ loadDoctors().catch(e=>toast('تعذر تحديث قائمة الدكاترة: '+e.message));}
 function composeSheet(rawPage) {
   return new Promise((resolve,reject)=>{
     const image=new Image();
@@ -504,6 +510,7 @@ function setupEditor(){
   $('prevPageBtn').addEventListener('click',()=>{if(pageIndex>0){saveCurrentPage();loadPage(pageIndex-1);queueDraft();}});
   $('nextPageBtn').addEventListener('click',()=>{if(pageIndex<pages.length-1){saveCurrentPage();loadPage(pageIndex+1);queueDraft();}});
   $('openEditorBtn').addEventListener('click',openEditor);
+  $('refreshDoctorsBtn').addEventListener('click',()=>loadDoctors().then(()=>toast('تم تحديث أسماء الدكاترة')).catch(e=>toast(e.message)));
   $('closeEditorBtn').addEventListener('click',()=>{saveDraft();closeModal('editorModal');});
   $('continueCaseBtn').addEventListener('click',continueToCaseDetails);
   $('backToHistoryBtn').addEventListener('click',()=>{saveDraft();setEditorStep('history');});
